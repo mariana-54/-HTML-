@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Отчет по наблюдаемости: анализ логов веб-сервера</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; background-color: #f4f6f9; color: #333; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
+        h1, h2 { color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 8px; }
+        pre { background: #2d3748; color: #f7fafc; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #cbd5e0; padding: 12px; text-align: left; }
+        th { background-color: #edf2f7; }
+        .danger { background-color: #fff5f5; color: #c53030; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Отчет по наблюдаемости: анализ логов веб-сервера</h1>
+        
+        <h2>1. Теоретические основы (Три столпа Observability)</h2>
+        <p><strong>Логи (Logs)</strong> — это хронологические текстовые записи о конкретных событиях в системе, помогающие понять, <em>что именно</em> произошло. <strong>Метрики (Metrics)</strong> — числовые показатели состояния системы за период времени (например, загрузка ЦП, объем ОЗУ), отражающие, <em>как</em> работает система. <strong>Трассировка (Traces)</strong> — это отслеживание пути прохождения единичного запроса через цепочку микросервисов, помогающее найти узкие места.</p>
+        
+        <h2>2. Журнал событий веб-сервера (Apache Access Log)</h2>
+        <pre><code>192.168.1.10 - - [22/Oct/2026:11:00:01 +0300] "GET /index.html HTTP/1.1" 200 4325
+192.168.1.12 - - [22/Oct/2026:11:00:05 +0300] "GET /assets/style.css HTTP/1.1" 200 1250
+198.51.100.42 - - [22/Oct/2026:11:02:15 +0300] "GET /admin HTTP/1.1" 404 230
+198.51.100.42 - - [22/Oct/2026:11:02:16 +0300] "GET /wp-admin/ HTTP/1.1" 404 230
+198.51.100.42 - - [22/Oct/2026:11:02:18 +0300] "POST /login.php HTTP/1.1" 403 150
+198.51.100.42 - - [22/Oct/2026:11:02:20 +0300] "GET /config.bak HTTP/1.1" 404 230
+198.51.100.42 - - [22/Oct/2026:11:02:22 +0300] "POST /admin/auth HTTP/1.1" 403 150
+192.168.1.10 - - [22/Oct/2026:11:03:01 +0300] "GET /about.html HTTP/1.1" 200 1820
+198.51.100.42 - - [22/Oct/2026:11:03:12 +0300] "GET /.env HTTP/1.1" 404 230</code></pre>
+        
+        <h2>3. Анализ инцидента безопасности</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>IP-адрес</th>
+                    <th>Запрашиваемый URL</th>
+                    <th>Код ошибки / Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>192.168.1.10</td>
+                    <td>/index.html, /about.html</td>
+                    <td>200 (Успешно)</td>
+                </tr>
+                <tr class="danger">
+                    <td>198.51.100.42</td>
+                    <td>/admin, /wp-admin/</td>
+                    <td>404 (Not Found) — поиск панелей управления</td>
+                </tr>
+                <tr class="danger">
+                    <td>198.51.100.42</td>
+                    <td>/login.php, /admin/auth</td>
+                    <td>403 (Forbidden) — попытка несанкционированного доступа</td>
+                </tr>
+                <tr class="danger">
+                    <td>198.51.100.42</td>
+                    <td>/config.bak, /.env</td>
+                    <td>404 (Not Found) — сканирование конфигурационных файлов</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h2>4. Заключение и выводы для администратора</h2>
+        <p>На основе анализа логов зафиксирована попытка сканирования уязвимостей и подбора паролей злоумышленником с IP-адреса <strong>198.51.100.42</strong>. Системному администратору необходимо немедленно заблокировать данный IP-адрес на сетевом экране (файрволе) или настроить автоматическую блокировку через утилиту Fail2ban. Также рекомендуется изменить стандартные пути к административным панелям и проверить права доступа к важным файлам конфигурации.</p>
+    </div>
+</body>
+</html>
